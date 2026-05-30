@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NekoWhitelist 邮箱验证</title>
+</head>
+<body style="margin:0; padding:0; background-color:#fdf6f9; font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fdf6f9; padding: 40px 0;">
+  <tr>
+    <td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 4px 24px rgba(255,150,180,0.15);">
+        <!-- Header -->
+        <tr>
+          <td style="background: linear-gradient(135deg, #ff9ec4, #ffc8dd); padding: 32px 40px; text-align: center;">
+            <h1 style="margin:0; font-size:26px; color:#ffffff; text-shadow:0 2px 4px rgba(0,0,0,0.08);">
+              🐾 NekoWhitelist 喵~
+            </h1>
+            <p style="margin:8px 0 0 0; font-size:14px; color:#fff5f8;">
+              邮箱验证码
+            </p>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding: 40px;">
+            <p style="margin:0 0 16px 0; font-size:15px; color:#5a4a4f; line-height:1.7;">
+              喵喵~ 你好呀！
+            </p>
+            <p style="margin:0 0 24px 0; font-size:15px; color:#5a4a4f; line-height:1.7;">
+              你正在绑定 <strong style="color:#e8789a;">NekoWhitelist</strong> 的邮箱喵~<br>
+              请使用下面的验证码完成验证：
+            </p>
+
+            <!-- Verification Code Box -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 24px 0;">
+              <tr>
+                <td style="background-color:#fff5f8; border:2px dashed #ffb8d0; border-radius:12px; padding: 24px; text-align:center;">
+                  <span style="font-size:36px; font-weight:bold; color:#e8789a; letter-spacing:8px; font-family: 'Courier New', monospace;">
+                    {{code}}
+                  </span>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 8px 0; font-size:13px; color:#9a8a8f; line-height:1.6;">
+              ⏰ 验证码有效期为 <strong>{{expiry_minutes}}</strong> 分钟，请尽快使用喵~
+            </p>
+            <p style="margin:0 0 8px 0; font-size:13px; color:#9a8a8f; line-height:1.6;">
+              📋 在游戏中使用命令：<code style="background:#f5f0f2; padding:2px 8px; border-radius:4px; color:#d0678a;">/nw email verify {{code}}</code>
+            </p>
+
+            <hr style="border:none; border-top:1px solid #f0e0e8; margin: 24px 0;">
+
+            <p style="margin:0; font-size:12px; color:#bfa8b0; line-height:1.6;">
+              如果这不是你操作的，请忽略这封邮件喵~<br>
+              你的邮箱地址不会被用于其他用途喵~
+            </p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="background-color:#fdf6f9; padding: 20px 40px; text-align:center;">
+            <p style="margin:0; font-size:12px; color:#c8a8b4;">
+              🐱 NekoWhitelist 猫娘管理团队<br>
+              <span style="color:#d8b8c4;">—— 守护每一只可爱玩家喵~</span>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

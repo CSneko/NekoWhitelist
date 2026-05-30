@@ -1,0 +1,42 @@
+{
+  "white": [
+    {
+      "name": "PlayerA",
+      "add_time": "2026-05-30T16:20:21",
+      "adder": "Console",
+      "method": "in-game",
+      "email": "xxx@gmail.com"
+    },
+    {
+      "name": "PlayerB",
+      "add_time": "2026-05-28T12:44:13",
+      "adder": "Player123",
+      "method": "in-game",
+      "email": "null"
+    },
+    {
+      "name": "PlayerC",
+      "add_time": "2026-05-27T12:44:13",
+      "adder": "null",
+      "method": "web",
+      "email": "1314453637@qq.com"
+    },
+    {
+      "name": "PlayerD",
+      "add_time": "null",
+      "adder": "null",
+      "method": "back",
+      "email": "null"
+    }
+  ],
+  "black": [
+    {
+      "name": "PlayerE",
+      "ban_time": "2026-05-24T11:44:11",
+      "reason": "cheat",
+      "message": "你因为作弊被ban了",
+      "unban_time": "2026-06-24T11:44:11",
+      "operator": "Console"
+    }
+  ]
+}

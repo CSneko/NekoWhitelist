@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "neko_whitelist",
+  "version": "${version}",
+  "name": "NekoWhitelist",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "GPL-3.0",
+  "icon": "assets/neko_whitelist/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "org.cneko.nekowhitelist.client.NWClient"
+    ],
+    "main": [
+      "org.cneko.nekowhitelist.NW"
+    ]
+  },
+  "mixins": [
+    "neko_whitelist.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": "*",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
