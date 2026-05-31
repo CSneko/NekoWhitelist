@@ -345,6 +345,25 @@ public class EmailService {
         return TemplateManager.getInstance().render("verification.html", vars);
     }
 
+    public CompletableFuture<Boolean> sendPasswordResetCode(String toEmail, String code) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                sendEmail(toEmail, "NekoWhitelist 密码重置喵~", buildPasswordResetBody(code), null);
+                return true;
+            } catch (Exception e) {
+                LOGGER.error("发送密码重置邮件失败喵!", e);
+                return false;
+            }
+        });
+    }
+
+    private String buildPasswordResetBody(String code) {
+        Map<String, String> vars = new HashMap<>();
+        vars.put("code", code);
+        vars.put("expiry_minutes", "5");
+        return TemplateManager.getInstance().render("password_reset.html", vars);
+    }
+
     private String buildDebugBody() {
         ModConfig.EmailConfig cfg = ModConfig.getInstance().email;
         Map<String, String> vars = new HashMap<>();

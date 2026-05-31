@@ -12,7 +12,7 @@ import java.nio.file.Path;
 public class ModConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_FILE = FabricLoader.getInstance().getConfigDir().resolve("neko_whitelist/config.json");
-    private static final int CURRENT_VERSION = 1;
+    private static final int CURRENT_VERSION = 4;
 
     private static ModConfig instance;
 
@@ -20,6 +20,8 @@ public class ModConfig {
     public boolean enabled = true;
     public boolean whitelistEnabled = false;
     public boolean blacklistEnabled = true;
+    public boolean broadcastWhitelistAdd = true;
+    public LoginConfig login = new LoginConfig();
     public EmailConfig email = new EmailConfig();
 
     public static ModConfig getInstance() {
@@ -40,6 +42,10 @@ public class ModConfig {
                 this.enabled = loaded.enabled;
                 this.whitelistEnabled = loaded.whitelistEnabled;
                 this.blacklistEnabled = loaded.blacklistEnabled;
+                this.broadcastWhitelistAdd = loaded.broadcastWhitelistAdd;
+                if (loaded.login != null) {
+                    this.login = loaded.login;
+                }
                 if (loaded.email != null) {
                     this.email = loaded.email;
                 }
@@ -58,6 +64,15 @@ public class ModConfig {
         if (fromVersion < 1) {
             // 示例: 从版本0迁移到版本1
         }
+        if (fromVersion < 2) {
+            this.broadcastWhitelistAdd = true;
+        }
+        if (fromVersion < 3) {
+            this.login = new LoginConfig();
+        }
+        if (fromVersion < 4) {
+            this.login.loginTimeoutSeconds = 120;
+        }
         this.configVersion = CURRENT_VERSION;
     }
 
@@ -70,6 +85,13 @@ public class ModConfig {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static class LoginConfig {
+        public boolean enabled = false;              // 登录系统总开关
+        public boolean autoLoginEnabled = true;      // IP自动登录开关
+        public int autoLoginDays = 3;                // 自动登录时间窗口（天）
+        public int loginTimeoutSeconds = 120;        // 未登录自动踢出时间（秒），0=不踢出
     }
 
     public static class EmailConfig {

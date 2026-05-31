@@ -4,6 +4,8 @@
   "package": "org.cneko.nekowhitelist.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "PlayerFreezeMixin",
+    "ServerPlayerMixin"
   ],
   "client": [
   ],

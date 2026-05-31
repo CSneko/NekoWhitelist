@@ -139,6 +139,14 @@ public class NWCommand {
         }
         data.addWhite(new WhiteListEntry(player, adder));
         ctx.getSource().sendSuccess(() -> Component.literal("§a✨ " + player + " 已加入白名单喵~ 欢迎欢迎！"), true);
+
+        // 公屏广播
+        if (ModConfig.getInstance().broadcastWhitelistAdd) {
+            ctx.getSource().getServer().getPlayerList().broadcastSystemMessage(
+                Component.literal("§6🎉 " + player + " §e已被 §b" + adder + " §e添加到了白名单喵~ 大家欢迎新朋友！"),
+                false
+            );
+        }
         return 1;
     }
 
@@ -154,6 +162,14 @@ public class NWCommand {
         }
         data.addWhite(new WhiteListEntry(player, adder, email));
         ctx.getSource().sendSuccess(() -> Component.literal("§a✨ " + player + " 已加入白名单喵~ 邮箱: " + email + " 绑定成功！"), true);
+
+        // 公屏广播
+        if (ModConfig.getInstance().broadcastWhitelistAdd) {
+            ctx.getSource().getServer().getPlayerList().broadcastSystemMessage(
+                Component.literal("§6🎉 " + player + " §e已被 §b" + adder + " §e添加到了白名单喵~ 大家欢迎新朋友！"),
+                false
+            );
+        }
         return 1;
     }
 
@@ -301,7 +317,7 @@ public class NWCommand {
             return 0;
         }
 
-        String email = StringArgumentType.getString(ctx, "email");
+        String newEmail = StringArgumentType.getString(ctx, "email");
         String playerName = player.getGameProfile().getName();
         var vMgr = VerificationManager.getInstance();
         var config = ModConfig.getInstance();
@@ -315,32 +331,69 @@ public class NWCommand {
         // check if email already belongs to another player
         WhitelistDataManager dataMgr = WhitelistDataManager.getInstance();
         for (WhiteListEntry e : dataMgr.getWhiteList()) {
-            if (email.equalsIgnoreCase(e.email()) && !e.name().equalsIgnoreCase(playerName)) {
+            if (newEmail.equalsIgnoreCase(e.email()) && !e.name().equalsIgnoreCase(playerName)) {
                 ctx.getSource().sendFailure(Component.literal("§c这个邮箱已经被 " + e.name() + " 绑定了喵~"));
                 return 0;
             }
         }
 
-        String code = vMgr.generateCode();
-        vMgr.putCode(playerName, email, code);
-        vMgr.markSent(playerName);
+        // Check if player already has a bound email
+        String oldEmail = null;
+        var existingEntry = dataMgr.getWhiteEntry(playerName);
+        if (existingEntry.isPresent() && !"null".equals(existingEntry.get().email())) {
+            oldEmail = existingEntry.get().email();
+        }
 
-        // try to send email
-        if (config.email.enabled) {
-            EmailService.getInstance().sendVerificationCode(email, code)
-                .thenAccept(success -> {
-                    if (success) {
-                        player.sendSystemMessage(Component.literal("§a📧 验证码已发送到 " + email + " 喵~ 请检查邮箱！"));
-                    } else {
-                        player.sendSystemMessage(Component.literal("§e⚠ 邮件发送失败喵…… 去问问服务器管理员呢"));
-                    }
-                });
-            ctx.getSource().sendSuccess(() -> Component.literal("§a📧 正在发送验证码到 " + email + " 喵~"), false);
+        // If player already has this exact email, no need to change
+        if (oldEmail != null && oldEmail.equalsIgnoreCase(newEmail)) {
+            ctx.getSource().sendFailure(Component.literal("§c这个邮箱已经绑定给你了喵~ 不需要重新设置！"));
+            return 0;
+        }
+
+        String code = vMgr.generateCode();
+
+        if (oldEmail != null) {
+            // ===== Email CHANGE: verify old email FIRST =====
+            // Store pending with newEmail as the target, send code to old email
+            vMgr.putCode(playerName, oldEmail, code, newEmail);
+            vMgr.markSent(playerName);
+
+            String maskedOld = maskEmail(oldEmail);
+            if (config.email.enabled) {
+                EmailService.getInstance().sendVerificationCode(oldEmail, code)
+                    .thenAccept(success -> {
+                        if (success) {
+                            player.sendSystemMessage(Component.literal("§a📧 验证码已发送到旧邮箱 " + maskedOld + " 喵~\n§7💡 没收到邮件？记得检查一下垃圾邮件箱喵~"));
+                        } else {
+                            player.sendSystemMessage(Component.literal("§e⚠ 邮件发送失败喵…… 去问问服务器管理员呢"));
+                        }
+                    });
+                ctx.getSource().sendSuccess(() -> Component.literal("§6🔄 检测到邮箱变更请求，正在发送验证码到旧邮箱 " + maskedOld + " 喵~\n§7验证旧邮箱后，我们会再向新邮箱发送验证码~"), false);
+            } else {
+                ctx.getSource().sendSuccess(() -> Component.literal(
+                    "§e⚠ 邮件服务未启用喵"
+                ), false);
+            }
         } else {
-            // SMTP not configured, show code in chat
-            ctx.getSource().sendSuccess(() -> Component.literal(
-                "§e⚠ 邮件服务未启用喵"
-            ), false);
+            // ===== New email BIND: current behavior =====
+            vMgr.putCode(playerName, newEmail, code);
+            vMgr.markSent(playerName);
+
+            if (config.email.enabled) {
+                EmailService.getInstance().sendVerificationCode(newEmail, code)
+                    .thenAccept(success -> {
+                        if (success) {
+                            player.sendSystemMessage(Component.literal("§a📧 验证码已发送到 " + newEmail + " 喵~\n§7💡 没收到邮件？记得检查一下垃圾邮件箱喵~"));
+                        } else {
+                            player.sendSystemMessage(Component.literal("§e⚠ 邮件发送失败喵…… 去问问服务器管理员呢"));
+                        }
+                    });
+                ctx.getSource().sendSuccess(() -> Component.literal("§a📧 正在发送验证码到 " + newEmail + " 喵~"), false);
+            } else {
+                ctx.getSource().sendSuccess(() -> Component.literal(
+                    "§e⚠ 邮件服务未启用喵"
+                ), false);
+            }
         }
         return 1;
     }
@@ -366,6 +419,36 @@ public class NWCommand {
             return 0;
         }
 
+        // If this verification was for an email CHANGE (newEmail is set),
+        // the player just proved ownership of the old email.
+        // Now send a new code to the NEW email for phase 2.
+        if (pv.newEmail() != null) {
+            String newEmail = pv.newEmail();
+            var vMgr = VerificationManager.getInstance();
+            var config = ModConfig.getInstance();
+
+            String newCode = vMgr.generateCode();
+            vMgr.putCode(playerName, newEmail, newCode); // phase 2: no newEmail field
+
+            if (config.email.enabled) {
+                EmailService.getInstance().sendVerificationCode(newEmail, newCode)
+                    .thenAccept(success -> {
+                        if (success) {
+                            player.sendSystemMessage(Component.literal("§a📧 旧邮箱验证成功！验证码已发送到新邮箱 " + newEmail + " 喵~\n§7💡 没收到邮件？记得检查一下垃圾邮件箱喵~"));
+                        } else {
+                            player.sendSystemMessage(Component.literal("§e⚠ 邮件发送失败喵…… 去问问服务器管理员呢"));
+                        }
+                    });
+                ctx.getSource().sendSuccess(() -> Component.literal("§a✅ 旧邮箱验证成功！验证码已发送到新邮箱 " + newEmail + " 喵~\n§7请再次使用 /nw email verify <验证码> 来验证新邮箱~"), false);
+            } else {
+                ctx.getSource().sendSuccess(() -> Component.literal(
+                    "§a✅ 旧邮箱验证成功！但邮件服务未启用，新邮箱无法验证喵~"
+                ), false);
+            }
+            return 1;
+        }
+
+        // Phase 2 (email change) or initial bind: commit the email
         WhitelistDataManager.getInstance().setEmailForPlayer(playerName, pv.email());
         ctx.getSource().sendSuccess(() -> Component.literal("§a✨ 邮箱验证成功喵！§b" + pv.email() + " §a已绑定到你的账号喵~"), true);
         return 1;
@@ -428,6 +511,20 @@ public class NWCommand {
     }
 
     // ========== Utilities ==========
+
+    /**
+     * Partially mask an email address for display, e.g. {@code a***@example.com}.
+     */
+    private static String maskEmail(String email) {
+        if (email == null || !email.contains("@")) return email;
+        int atIndex = email.indexOf('@');
+        String local = email.substring(0, atIndex);
+        String domain = email.substring(atIndex);
+        if (local.length() <= 1) {
+            return email.charAt(0) + "***" + domain;
+        }
+        return local.charAt(0) + "***" + domain;
+    }
 
     private static long parseDuration(String input) {
         input = input.toLowerCase().trim();

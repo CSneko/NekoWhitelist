@@ -22,7 +22,21 @@ public class VerificationManager {
         return instance;
     }
 
-    public record PendingVerification(String playerName, String email, String code, Instant expiresAt) {}
+    /**
+     * @param playerName the player who requested verification
+     * @param email      the email address where the code was sent
+     * @param code       the 6-digit verification code
+     * @param expiresAt  when this code expires
+     * @param newEmail   if non-null, this is an email CHANGE: the code was sent to
+     *                   {@code email} (the old address) and {@code newEmail} is the
+     *                   target new address. When null, this is a plain bind/verify.
+     */
+    public record PendingVerification(String playerName, String email, String code, Instant expiresAt, String newEmail) {
+        /** Convenience constructor for plain bind (no old-email check). */
+        public PendingVerification(String playerName, String email, String code, Instant expiresAt) {
+            this(playerName, email, code, expiresAt, null);
+        }
+    }
 
     public String generateCode() {
         return String.format("%06d", ThreadLocalRandom.current().nextInt(0, 1000000));
@@ -47,10 +61,16 @@ public class VerificationManager {
     }
 
     public void putCode(String playerName, String email, String code) {
+        putCode(playerName, email, code, null);
+    }
+
+    /** Stores a pending verification for an email CHANGE, where {@code email} is the old address
+     * and {@code newEmail} is the target new address. */
+    public void putCode(String playerName, String email, String code, String newEmail) {
         cleanup();
         // remove any existing pending for this player
         pending.values().removeIf(p -> p.playerName.equalsIgnoreCase(playerName));
-        pending.put(code, new PendingVerification(playerName, email, code, Instant.now().plusSeconds(CODE_EXPIRY_SECONDS)));
+        pending.put(code, new PendingVerification(playerName, email, code, Instant.now().plusSeconds(CODE_EXPIRY_SECONDS), newEmail));
     }
 
     public PendingVerification verify(String code) {
