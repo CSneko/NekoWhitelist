@@ -32,7 +32,9 @@ public class NW implements ModInitializer {
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             NWCommand.register(dispatcher);
-            LoginCommand.register(dispatcher);
+            if (ModConfig.getInstance().login.enabled) {
+                LoginCommand.register(dispatcher);
+            }
         });
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

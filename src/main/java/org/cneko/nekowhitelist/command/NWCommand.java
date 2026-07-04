@@ -3,6 +3,7 @@ package org.cneko.nekowhitelist.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -13,7 +14,9 @@ import org.cneko.nekowhitelist.data.WhiteListEntry;
 import org.cneko.nekowhitelist.data.WhitelistDataManager;
 import org.cneko.nekowhitelist.email.EmailService;
 import org.cneko.nekowhitelist.email.VerificationManager;
+import org.cneko.nekowhitelist.migration.EasyAuthMigrator;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -100,6 +103,21 @@ public class NWCommand {
             .executes(NWCommand::emailStatus));
 
         root.then(email);
+
+        // /nw migrate ... (admin only, 数据迁移)
+        var migrate = Commands.literal("migrate")
+            .requires(source -> source.hasPermission(4));
+
+        // /nw migrate easyauth [path]
+        migrate.then(Commands.literal("easyauth")
+            .executes(ctx -> migrateEasyAuth(ctx, null))
+            .then(Commands.argument("path", StringArgumentType.greedyString())
+                .executes(ctx -> {
+                    String path = StringArgumentType.getString(ctx, "path");
+                    return migrateEasyAuth(ctx, path);
+                })));
+
+        root.then(migrate);
 
         dispatcher.register(root);
     }
@@ -508,6 +526,99 @@ public class NWCommand {
             });
 
         return 1;
+    }
+
+    // ========== Migration Commands ==========
+
+    /**
+     * 执行 EasyAuth 数据迁移。
+     *
+     * @param ctx     命令上下文
+     * @param filePath 数据库文件路径，为 null 时自动探测默认路径
+     */
+    private static int migrateEasyAuth(CommandContext<CommandSourceStack> ctx, String filePath) {
+        Path dbPath = resolveDbPath(filePath);
+        if (dbPath == null) {
+            ctx.getSource().sendFailure(Component.literal(
+                "§c找不到 EasyAuth 数据库文件喵！\n"
+                    + "§7请使用 §a/nw migrate easyauth <路径> §7手动指定数据库文件路径喵~\n"
+                    + "§7常见的 EasyAuth 数据库位置：\n"
+                    + "§7  • config/easyauth/easyauth.db\n"
+                    + "§7  • mods/easyauth.db"
+            ));
+            return 0;
+        }
+
+        final Path finalPath = dbPath;
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§6🔄 正在从 EasyAuth 迁移数据喵...\n§7数据库: " + finalPath.toAbsolutePath()
+        ), true);
+
+        try {
+            EasyAuthMigrator.MigrationResult result = EasyAuthMigrator.migrate(finalPath);
+
+            String stats = result.toString();
+            // 按行拆分输出，避免聊天框截断
+            for (String line : stats.split("\n")) {
+                if (!line.isBlank()) {
+                    ctx.getSource().sendSuccess(() -> Component.literal("§a" + line), true);
+                }
+            }
+            ctx.getSource().sendSuccess(() -> Component.literal(
+                "§a✨ EasyAuth 数据迁移完成喵！\n"
+                    + "§7💡 提示：迁移过来的密码会在玩家第一次登录时自动升级为 SHA-256 加密喵~"
+            ), true);
+            return 1;
+        } catch (EasyAuthMigrator.MigrationException e) {
+            ctx.getSource().sendFailure(Component.literal("§c迁移失败喵: " + e.getMessage()));
+            return 0;
+        } catch (Exception e) {
+            ctx.getSource().sendFailure(Component.literal("§c迁移时发生未知错误喵: " + e.getMessage()));
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    /**
+     * 解析用户指定的路径或自动探测 EasyAuth 数据库位置。
+     *
+     * @param filePath 用户指定的路径，为 null 时自动探测
+     * @return 解析后的数据库路径，或 null 表示未找到
+     */
+    private static Path resolveDbPath(String filePath) {
+        if (filePath != null && !filePath.isBlank()) {
+            Path path = Path.of(filePath);
+            if (!path.isAbsolute()) {
+                path = path.toAbsolutePath();
+            }
+            return path;
+        }
+        return findEasyAuthDb();
+    }
+
+    /**
+     * 自动探测 EasyAuth 数据库文件的常见位置。
+     */
+    private static Path findEasyAuthDb() {
+        Path configDir = FabricLoader.getInstance().getConfigDir();
+
+        // 常见位置 1: config/easyauth/easyauth.db
+        Path path1 = configDir.resolve("easyauth/easyauth.db");
+        if (java.nio.file.Files.exists(path1)) return path1;
+
+        // 常见位置 2: config/easyauth.db
+        Path path2 = configDir.resolve("easyauth.db");
+        if (java.nio.file.Files.exists(path2)) return path2;
+
+        // 常见位置 3: 游戏目录下的 easyauth.db
+        Path path3 = FabricLoader.getInstance().getGameDir().resolve("easyauth.db");
+        if (java.nio.file.Files.exists(path3)) return path3;
+
+        // 常见位置 4: 游戏目录下的 config/easyauth/easyauth.db
+        Path path4 = FabricLoader.getInstance().getGameDir().resolve("config/easyauth/easyauth.db");
+        if (java.nio.file.Files.exists(path4)) return path4;
+
+        return null;
     }
 
     // ========== Utilities ==========
