@@ -2,7 +2,7 @@ package org.cneko.nekowhitelist.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -11,7 +11,7 @@ import java.nio.file.Path;
 
 public class ModConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path CONFIG_FILE = FabricLoader.getInstance().getConfigDir().resolve("neko_whitelist/config.json");
+    private static final Path CONFIG_FILE = FMLPaths.CONFIGDIR.get().resolve("neko_whitelist/config.json");
     private static final int CURRENT_VERSION = 4;
 
     private static ModConfig instance;

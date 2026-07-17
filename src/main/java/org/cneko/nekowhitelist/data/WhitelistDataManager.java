@@ -3,7 +3,7 @@ package org.cneko.nekowhitelist.data;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -16,7 +16,7 @@ import java.util.Optional;
 
 public class WhitelistDataManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path DATA_FILE = FabricLoader.getInstance().getConfigDir().resolve("neko_whitelist/data.json");
+    private static final Path DATA_FILE = FMLPaths.CONFIGDIR.get().resolve("neko_whitelist/data.json");
 
     private static WhitelistDataManager instance;
 

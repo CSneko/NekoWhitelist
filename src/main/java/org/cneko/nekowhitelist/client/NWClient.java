@@ -1,10 +1,13 @@
 package org.cneko.nekowhitelist.client;
 
-import net.fabricmc.api.ClientModInitializer;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
 
-public class NWClient implements ClientModInitializer {
+@Mod(value = "neko_whitelist", dist = Dist.CLIENT)
+public class NWClient {
 
-    @Override
-    public void onInitializeClient() {
+    public NWClient(IEventBus modEventBus) {
+        // Client-side initialization (reserved for future use)
     }
 }

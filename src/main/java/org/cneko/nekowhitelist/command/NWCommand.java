@@ -3,7 +3,7 @@ package org.cneko.nekowhitelist.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.loading.FMLPaths;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -600,7 +600,7 @@ public class NWCommand {
      * 自动探测 EasyAuth 数据库文件的常见位置。
      */
     private static Path findEasyAuthDb() {
-        Path configDir = FabricLoader.getInstance().getConfigDir();
+        Path configDir = FMLPaths.CONFIGDIR.get();
 
         // 常见位置 1: config/easyauth/easyauth.db
         Path path1 = configDir.resolve("easyauth/easyauth.db");
@@ -611,11 +611,11 @@ public class NWCommand {
         if (java.nio.file.Files.exists(path2)) return path2;
 
         // 常见位置 3: 游戏目录下的 easyauth.db
-        Path path3 = FabricLoader.getInstance().getGameDir().resolve("easyauth.db");
+        Path path3 = FMLPaths.GAMEDIR.get().resolve("easyauth.db");
         if (java.nio.file.Files.exists(path3)) return path3;
 
         // 常见位置 4: 游戏目录下的 config/easyauth/easyauth.db
-        Path path4 = FabricLoader.getInstance().getGameDir().resolve("config/easyauth/easyauth.db");
+        Path path4 = FMLPaths.GAMEDIR.get().resolve("config/easyauth/easyauth.db");
         if (java.nio.file.Files.exists(path4)) return path4;
 
         return null;

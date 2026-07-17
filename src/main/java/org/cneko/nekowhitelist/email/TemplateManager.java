@@ -1,6 +1,6 @@
 package org.cneko.nekowhitelist.email;
 
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.loading.FMLPaths;
 import org.cneko.nekowhitelist.config.ModConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TemplateManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("NekoWhitelist:Template");
-    private static final Path CONFIG_BASE = FabricLoader.getInstance().getConfigDir().resolve("neko_whitelist");
+    private static final Path CONFIG_BASE = FMLPaths.CONFIGDIR.get().resolve("neko_whitelist");
     private static final String BUILTIN_PREFIX = "templates/email/";
 
     /** 内置模板文件列表 — 新增模板时在此添加即可 */
